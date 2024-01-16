@@ -4,7 +4,9 @@
     {
         public int Id { get; set; }
         public double Amount { get; set; }
-       public string PayTo { get; set; }
+       public string payToName { get; set; }
+        public string payToSurName { get; set; }
+
         public DateTime LaunchDate { get; set; }
 
     }
