@@ -5,6 +5,7 @@ namespace InvoiceAPP.Models.DTO
     public class InvoiceDTO
     {
         public int Id { get; set; }
+        public int UserID { get; set; }
         public double Amount { get; set; }
         [Required]
         [MaxLength(30)]
