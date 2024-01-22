@@ -2,26 +2,32 @@
 using InvoiceAPP.Models;
 using InvoiceAPP.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace InvoiceAPP.Controllers
 {
     [Route("api/InvoiceAPI")]
     [ApiController]
-    public class Invoicecontroller : Controller
+    public class Invoicecontroller : ControllerBase
     {
-        private InvoiceService _invoiceservice;
+        private IInvoiceService _invoiceService;
 
-        public Invoicecontroller(InvoiceService invoiceService)
+        public Invoicecontroller(IInvoiceService invoiceService)
         {
-            _invoiceservice = invoiceService;
+            _invoiceService = invoiceService ?? throw new ArgumentNullException(nameof(invoiceService));
+            
         }
 
 
-        [HttpGet]
+        [HttpGet("userID:int")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<InvoiceDTO>>> GetInvoices()
+        public ActionResult<List<InvoiceDTO>> GetInvoices(int userID)
         {
-            var invoices = await _invoiceservice.ListInvoices();
+            var invoices =  _invoiceService.GetInvoiceList(userID);
             return Ok(invoices);
         }
 
@@ -29,9 +35,9 @@ namespace InvoiceAPP.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<InvoiceDTO>> GetInvoice(int id)
+        public ActionResult<InvoiceDTO> GetInvoice(int id)
         {
-            var invoice = await _invoiceservice.GetInvoice(id);
+            var invoice =  _invoiceService.GetInvoice(id);
             return Ok(invoice);
         }
 
@@ -41,8 +47,8 @@ namespace InvoiceAPP.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult<InvoiceDTO> CreateInvoice([FromBody] InvoiceDTO invoice)
         {
-            _invoiceservice.CreateInvoice(invoice);
-            return CreatedAtRoute("GetInvoices", new { id = invoice.Id }, invoice);
+            _invoiceService.CreateInvoice(invoice);
+            return CreatedAtRoute("GetInvoices", new { invloiceId = invoice.InvoiceId }, invoice);
         }
 
         [HttpDelete("id:int", Name = "DeleteInvoices")]
@@ -52,7 +58,7 @@ namespace InvoiceAPP.Controllers
 
         public IActionResult DeleteInvoice(int id)
         {
-            _invoiceservice.DeleteInvoice(id);
+            _invoiceService.DeleteInvoice(id);
             return NoContent();
         }
 
