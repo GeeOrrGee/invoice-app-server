@@ -7,88 +7,137 @@ namespace InvoiceAPP.Models
 {
     public class InvoiceRepository : IInvoiceRepository
     {
-
-        //private InvoiceStore _entities = new InvoiceStore();
-        public InvoiceDTO? GetInvoice(int invoiceId)
+        private const int NUMBER_OF_DIGITS = 4;
+        private const int NUMBER_OF_CHARACTERS = 2;
+        static string GenerateString()
         {
-            foreach (var invoice in InvoiceStore.invoiceList)
-            {
-                if (invoice.InvoiceId == invoiceId)
-                {
-                    return invoice;
-                }
-            }
+            string uppercaseChars = GenerateRandomUppercase(NUMBER_OF_CHARACTERS);
+         
+            string digits = GenerateRandomDigits(NUMBER_OF_DIGITS);
+            
+            string result = uppercaseChars + digits;
 
-            return null;
-            //throw new ArgumentException("Invoice with this Id does not exist!");
-        }
-
-        public List<InvoiceDTO> GetInvoiceList(int fromUserId)
-        {
-            List<InvoiceDTO> results = new List<InvoiceDTO>();
-
-            foreach (var invoice in InvoiceStore.invoiceList)
-            {
-                if (invoice.FromUserID == fromUserId)
-                {
-                    results.Add(invoice);
-                }
-            }
-            if (results.Any())
-            {
-                return results;
-            }
-
-            return null;
-            //throw new ArgumentException("Invoices with this UserId does not exist!");
+            return result;
         }
         
-        public bool CreateInvoice(InvoiceDTO invoiceToCreate)
+        private static string GenerateRandomUppercase(int length)
         {
-            try
+            Random random = new Random();
+            string uppercaseChars = "";
+            for (int i = 0; i < length; i++)
             {
-                invoiceToCreate.InvoiceId = InvoiceStore.invoiceList.OrderByDescending(u => u.InvoiceId).FirstOrDefault().InvoiceId + 1;
+                char randomChar = (char)random.Next('A', 'Z' + 1);
+                uppercaseChars += randomChar;
+            }
+            return uppercaseChars;
+        }
+        
+        private static string GenerateRandomDigits(int length)
+        {
+            Random random = new Random();
+            string digits = "";
+            for (int i = 0; i < length; i++)
+            {
+                char randomDigit = (char)random.Next('0', '9' + 1);
+                digits += randomDigit;
+            }
+            return digits;
+        }
+
+        private static bool checkingGeneratedString(string generatedString)
+        {
+            foreach (var invoice in Data.InvoiceStore.invoiceList)
+            {
+                if (generatedString == invoice.invoiceId) return false;
+            }
+            return true;
+        }
+
+        private string generateNewInvoiceId()
+        {
+            string newPossibleInvoiceId = "";
+            while (true)
+            {
+                newPossibleInvoiceId = GenerateString();
+                if (checkingGeneratedString(newPossibleInvoiceId)) break;
+            }
+            return newPossibleInvoiceId;
+        }
+        public bool newInvoice(Invoice.Invoice invoiceToCreate)
+        {
+                invoiceToCreate.invoiceId = generateNewInvoiceId();
                 InvoiceStore.invoiceList.Add(invoiceToCreate);
                 return true;
-            }
-            catch
-            {
-                return false;
-            }
         }
-        
-        public bool DeleteInvoice(int invoiceId)
+
+        public bool editInvoice(string invoiceId, Invoice.Invoice editedInvoice)
+        {
+            for (int i = 0; i < InvoiceStore.invoiceList.Count(); i++)
+            {
+                if (InvoiceStore.invoiceList[i].invoiceId == invoiceId)
+                {
+                    InvoiceStore.invoiceList[i] = editedInvoice;
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        public bool markAsPaid(string invoiceId, Invoice.Invoice.Status newStatus)
+        {
+            for (int i = 0; i < InvoiceStore.invoiceList.Count(); i++)
+            {
+                if (InvoiceStore.invoiceList[i].invoiceId == invoiceId)
+                {
+                    InvoiceStore.invoiceList[i].status = newStatus;
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        public bool deleteInvoice(string invoiceId)
         {
             foreach (var invoice in InvoiceStore.invoiceList)
             {
-                if (invoice.InvoiceId == invoiceId)
+                if (invoice.invoiceId == invoiceId)
                 {
                     InvoiceStore.invoiceList.Remove(invoice);
                     return true;
                 }
             }
-
+            
             return false;
         }
         
-        public bool UpdateInvoice(int invoiceId, double newAmount)
+        public List<Invoice.Invoice> getInvoicesByOwnerId(string ownerId)
         {
-            try
+            List<Invoice.Invoice> invoices = new List<Invoice.Invoice>();
+            for (int i = 0; i < InvoiceStore.invoiceList.Count(); i++)
             {
-                foreach (var invoice in InvoiceStore.invoiceList)
+                if (InvoiceStore.invoiceList[i].ownerId == ownerId)
                 {
-                    if (invoice.InvoiceId == invoiceId)
-                    {
-                        invoice.Amount = newAmount;       
-                        return true;
-                    }
+                    invoices.Add(InvoiceStore.invoiceList[i]);
                 }
-                return false;
             }
-            catch
+
+            return invoices;
+        }
+
+        public List<Invoice.Invoice> GetInvoicesByStatus(string ownerId, Invoice.Invoice.Status status)
+        {
+            List<Invoice.Invoice> invoices = new List<Invoice.Invoice>();
+            for (int i = 0; i < InvoiceStore.invoiceList.Count(); i++)
             {
-                return false;
+                if (InvoiceStore.invoiceList[i].ownerId == ownerId && InvoiceStore.invoiceList[i].status == status)
+                {
+                    invoices.Add(InvoiceStore.invoiceList[i]);
+                }
             }
+            
+            return invoices;
         }
     }
 }
