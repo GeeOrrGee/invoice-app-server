@@ -2,46 +2,40 @@
 using InvoiceAPP.Models.DTO;
 using Microsoft.AspNetCore.Http;
 
-
 namespace InvoiceAPP.Models
 {
     public class InvoiceRepository : IInvoiceRepository
     {
-        private const int NUMBER_OF_DIGITS = 4;
+        private const int NUMBER_OF_DIGITS     = 4;
         private const int NUMBER_OF_CHARACTERS = 2;
+
+        private const char FROM_SYMBOL_FOR_DIGIT = '0';
+        private const char TO_SYMBOL_FRO_DIGIT   = '9';
+
+        private const char FROM_SYMBOL_FOR_CHARS = 'A';
+        private const char TO_SYMBOL_FOR_CHARS   = 'Z';
+        
+        private static string GenerateRandomSymbols(int length, char symbolsFrom, char symbolsTo)
+        {
+            Random random = new Random();
+            string symbols = "";
+            for (int i = 0; i < length; i++)
+            {
+                char randomDigit = (char)random.Next(symbolsFrom, symbolsTo + 1);
+                symbols += randomDigit;
+            }
+            return symbols;
+        }
+        
         static string GenerateString()
         {
-            string uppercaseChars = GenerateRandomUppercase(NUMBER_OF_CHARACTERS);
+            string uppercaseChars = GenerateRandomSymbols(NUMBER_OF_CHARACTERS, FROM_SYMBOL_FOR_CHARS, TO_SYMBOL_FOR_CHARS);
          
-            string digits = GenerateRandomDigits(NUMBER_OF_DIGITS);
+            string digits = GenerateRandomSymbols(NUMBER_OF_DIGITS, FROM_SYMBOL_FOR_DIGIT, TO_SYMBOL_FRO_DIGIT);
             
             string result = uppercaseChars + digits;
 
             return result;
-        }
-        
-        private static string GenerateRandomUppercase(int length)
-        {
-            Random random = new Random();
-            string uppercaseChars = "";
-            for (int i = 0; i < length; i++)
-            {
-                char randomChar = (char)random.Next('A', 'Z' + 1);
-                uppercaseChars += randomChar;
-            }
-            return uppercaseChars;
-        }
-        
-        private static string GenerateRandomDigits(int length)
-        {
-            Random random = new Random();
-            string digits = "";
-            for (int i = 0; i < length; i++)
-            {
-                char randomDigit = (char)random.Next('0', '9' + 1);
-                digits += randomDigit;
-            }
-            return digits;
         }
 
         private static bool checkingGeneratedString(string generatedString)
@@ -55,7 +49,7 @@ namespace InvoiceAPP.Models
 
         private string generateNewInvoiceId()
         {
-            string newPossibleInvoiceId = "";
+            string newPossibleInvoiceId;
             while (true)
             {
                 newPossibleInvoiceId = GenerateString();
@@ -122,7 +116,7 @@ namespace InvoiceAPP.Models
                     invoices.Add(InvoiceStore.invoiceList[i]);
                 }
             }
-
+            
             return invoices;
         }
 
