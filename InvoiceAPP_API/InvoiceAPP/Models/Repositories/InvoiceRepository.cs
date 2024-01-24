@@ -1,7 +1,4 @@
 ﻿using InvoiceAPP.Data;
-using InvoiceAPP.Models;
-using InvoiceAPP.Models.DTO;
-using Microsoft.AspNetCore.Http;
 
 namespace InvoiceAPP.Models
 {

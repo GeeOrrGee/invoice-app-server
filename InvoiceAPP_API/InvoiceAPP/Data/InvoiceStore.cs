@@ -1,5 +1,4 @@
-﻿using InvoiceAPP.Models.DTO;
-using InvoiceAPP.Models.Invoice;
+﻿using InvoiceAPP.Models.Invoice;
 
 namespace InvoiceAPP.Data
 {

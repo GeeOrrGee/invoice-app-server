@@ -1,11 +1,4 @@
 using InvoiceAPP.Models;
-using InvoiceAPP.Data;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);

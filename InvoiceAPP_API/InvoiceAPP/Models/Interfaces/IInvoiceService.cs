@@ -1,7 +1,4 @@
-﻿using InvoiceAPP.Models.DTO;
-using Microsoft.AspNetCore.Mvc;
-
-namespace InvoiceAPP.Models
+﻿namespace InvoiceAPP.Models
 {
     public interface IInvoiceService
     {

@@ -1,8 +1,4 @@
-﻿using InvoiceAPP.Models.DTO;
-using InvoiceAPP.Models.Invoice;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using static InvoiceAPP.Models.InvoiceRepository;
+﻿using InvoiceAPP.Models.Invoice;
 
 namespace InvoiceAPP.Models
 {

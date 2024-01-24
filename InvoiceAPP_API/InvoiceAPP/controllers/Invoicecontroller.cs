@@ -1,15 +1,7 @@
-﻿using InvoiceAPP.Data;
-using InvoiceAPP.Models;
-using InvoiceAPP.Models.DTO;
+﻿using InvoiceAPP.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using InvoiceAPP.Models.Invoice;
-using InvoiceAPP.Controllers;
 
 namespace InvoiceAPP.Controllers
 {
@@ -69,7 +61,7 @@ namespace InvoiceAPP.Controllers
         [HttpPost("create-device/")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<InvoiceDTO> CreateInvoice([FromBody] Invoice invoice)
+        public ActionResult<Invoice> CreateInvoice([FromBody] Invoice invoice)
         {
             var invoices =  _invoiceService.newInvoice(invoice);
             Func<object, ActionResult> func = statusMappings[invoices.Key];
