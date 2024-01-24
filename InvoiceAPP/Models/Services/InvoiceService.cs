@@ -50,21 +50,31 @@ namespace InvoiceAPP.Models
             if (!checkClientInfo(invoice.billTo)) return false;
             return true;
         }
+
+        private Invoice.Invoice uninitializedInvoice()
+        {
+            Invoice.Invoice invoice = new Invoice.Invoice();
+            invoice.status = Invoice.Invoice.Status.UNINITIALIZED;
+            return invoice;
+        }
+
+        private List<Invoice.Invoice> emptyInvoiceList()
+        {
+            List<Invoice.Invoice> emptyList = new List<Invoice.Invoice>();
+            return emptyList;
+        }
         
-        public KeyValuePair<STATUS_CODE, Invoice.Invoice> newInvoice(Invoice.Invoice invoiceToCreate)
+        public Invoice.Invoice? newInvoice(Invoice.Invoice invoiceToCreate)
         {
             if (validateInvoice(invoiceToCreate))
             {
                 _invoiceRepository.newInvoice(invoiceToCreate);
-                return new KeyValuePair<STATUS_CODE, Invoice.Invoice>(
-                    STATUS_CODE.OK, invoiceToCreate);
+                return invoiceToCreate;
             }
             else
             {
-                return new KeyValuePair<STATUS_CODE, Invoice.Invoice>(
-                    STATUS_CODE.BAD_REQUEST, null);
+                return null;
             }
-
         }
 
         private bool checkInvoice(Invoice.Invoice invoice)
@@ -72,102 +82,93 @@ namespace InvoiceAPP.Models
             //TODO:
             return true;
         }
-
-        public STATUS_CODE editInvoice(string invoiceId, Invoice.Invoice editedInvoice)
+        
+        public Invoice.Invoice? editInvoice(string invoiceId, Invoice.Invoice editedInvoice)
         {
             if (!checkInvoiceIdType(invoiceId) && checkInvoice(editedInvoice))
             {
                 if (_invoiceRepository.editInvoice(invoiceId, editedInvoice))
                 {
-                    return STATUS_CODE.NO_CONTENT;
+                    return editedInvoice;
                 }
-                return STATUS_CODE.NOT_FOUND;
+                
             }
-            return STATUS_CODE.BAD_REQUEST;
+            return uninitializedInvoice();
         }
         
-        //Need Modife
-        public STATUS_CODE markAsPaid(string invoiceId)
+        //Needs Modife
+        public Invoice.Invoice? markAsPaid(string invoiceId)
         {
             if (checkInvoiceIdType(invoiceId))
             {
                 if (_invoiceRepository.markAsPaid(invoiceId))
                 {
-                    return STATUS_CODE.NO_CONTENT;    
+                    return _invoiceRepository.getInvloiceByInvoiceId(invoiceId);    
                 }
                 else
                 {
-                    return STATUS_CODE.NOT_FOUND;  
+                    return uninitializedInvoice();  
                 }
             }
-            return STATUS_CODE.BAD_REQUEST;
+            return null;
         }
+        
 
-        public STATUS_CODE deleteInvoice(string invoiceId)
+        //დასაწერია
+        public Invoice.Invoice? deleteInvoice(string invoiceId)
         {
             if (checkInvoiceIdType(invoiceId))
             {
-                if (_invoiceRepository.deleteInvoice(invoiceId))
+                Invoice.Invoice? invoice = _invoiceRepository.deleteInvoice(invoiceId); 
+                if (invoice != null)
                 {
-                    return STATUS_CODE.NO_CONTENT;    
+                    return invoice;    
                 }
-                return STATUS_CODE.NOT_FOUND;
+                return uninitializedInvoice();
             }
-            return STATUS_CODE.BAD_REQUEST;
+            return null;
         }
         
         // This method needs modife       
-        public KeyValuePair<STATUS_CODE, List<Invoice.Invoice> >  getInvoicesByOwnerId(string ownerId)
+        public List<Invoice.Invoice> getInvoicesByOwnerId(string ownerId)
         {
             List < Invoice.Invoice > result= _invoiceRepository.getInvoicesByOwnerId(ownerId);
             if (result != null)
             {
-                return new KeyValuePair<STATUS_CODE, List<Invoice.Invoice>>(STATUS_CODE.OK, result);
+                return result;
             }
             else
             {
-                return new KeyValuePair<STATUS_CODE, List<Invoice.Invoice>>(STATUS_CODE.NOT_FOUND, null);
+                return emptyInvoiceList();
             }
         }
         
         // This method needs modife       
-        public  KeyValuePair<STATUS_CODE, List<Invoice.Invoice> > getInvoicesByStatus(string ownerId, Invoice.Invoice.Status status)
+        public  List<Invoice.Invoice>?  getInvoicesByStatus(string ownerId, Invoice.Invoice.Status status)
         {
             if ((status == Invoice.Invoice.Status.PAID || status == Invoice.Invoice.Status.DRAFT ||
                  status == Invoice.Invoice.Status.PANDING))
             {
                 List<Invoice.Invoice> result = _invoiceRepository.getInvoicesByStatus(ownerId, status);
-                if (result != null)
-                {
-                    return new KeyValuePair<STATUS_CODE, List<Invoice.Invoice>>(
-                        STATUS_CODE.OK, result);
-                }
-                else
-                {
-                    return new KeyValuePair<STATUS_CODE, List<Invoice.Invoice>>(
-                        STATUS_CODE.NOT_FOUND, null);
-                }
+                return result;
             }
-            return new KeyValuePair<STATUS_CODE, List<Invoice.Invoice> >(STATUS_CODE.BAD_REQUEST, null);
+            return null;
         }
-
-        public KeyValuePair<STATUS_CODE, Invoice.Invoice> getInvoiceByInvoiceId(string invoiceId)
+        
+        public Invoice.Invoice? getInvoiceByInvoiceId(string invoiceId)
         {
             if (checkInvoiceIdType(invoiceId))
             {
                 Invoice.Invoice result = _invoiceRepository.getInvloiceByInvoiceId(invoiceId);
                 if (result != null)
                 {
-                    return new KeyValuePair<STATUS_CODE, Invoice.Invoice>(
-                        STATUS_CODE.OK, result);
+                    return result;
                 }
-                return new KeyValuePair<STATUS_CODE, Invoice.Invoice>(
-                    STATUS_CODE.NOT_FOUND, null);
+                return uninitializedInvoice();
             }
             else
             {
-                return new KeyValuePair<STATUS_CODE, Invoice.Invoice>(
-                    STATUS_CODE.BAD_REQUEST, null);
+                return null;
             }
         }
     }

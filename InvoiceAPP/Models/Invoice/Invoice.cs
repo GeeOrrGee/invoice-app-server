@@ -9,6 +9,7 @@ public class Invoice
     [Serializable]
     public enum Status
     {
+        UNINITIALIZED,
         DRAFT,
         PANDING,
         PAID,

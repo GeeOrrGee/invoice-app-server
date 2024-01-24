@@ -11,17 +11,8 @@ namespace InvoiceAPP.Controllers
     {
         private IInvoiceService _invoiceService;
 
-        private Dictionary<STATUS_CODE, Func<object, ActionResult>> statusMappings;
-
         public Invoicecontroller(IInvoiceService invoiceService)
         {
-            statusMappings = new Dictionary<STATUS_CODE, Func<object, ActionResult>>
-            {
-                { STATUS_CODE.OK, content => Ok(content) },
-                { STATUS_CODE.BAD_REQUEST, content => BadRequest(content) },
-                { STATUS_CODE.NOT_FOUND, content => NotFound(content) },
-                { STATUS_CODE.NO_CONTENT, _ => NoContent() },
-            };
             _invoiceService = invoiceService ?? throw new ArgumentNullException(nameof(invoiceService));
         }
         
@@ -31,9 +22,13 @@ namespace InvoiceAPP.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<List<Invoice>> GetInvoicesByOwnerId(string ownerId)
         {
-            var invoices =  _invoiceService.getInvoicesByOwnerId(ownerId);
-            Func<object, ActionResult> func = statusMappings[invoices.Key];
-            return func(invoices.Value);
+            List<Invoice> ?invoices =  _invoiceService.getInvoicesByOwnerId(ownerId);
+            if (invoices != null)
+            {
+                if (invoices.Any()) return Ok(invoices);
+                return NotFound();
+            }
+            return BadRequest();
         }
 
         [HttpGet("get-invoice/{invoiceId:length(6)}", Name = "GetInvByInvId")]
@@ -42,9 +37,13 @@ namespace InvoiceAPP.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<Invoice> GetInvoice(string invoiceId)
         {
-            var invoices =  _invoiceService.getInvoiceByInvoiceId(invoiceId);
-            Func<object, ActionResult> func = statusMappings[invoices.Key];
-            return func(invoices.Value);
+            Invoice ?invoice =  _invoiceService.getInvoiceByInvoiceId(invoiceId);
+            if (invoice != null)
+            {
+                if (invoice.status != Invoice.Status.UNINITIALIZED) return Ok(invoice);
+                return NotFound();
+            }
+            return BadRequest();
         }
         
         [HttpGet("get-invoices-by-status/{ownerId:maxlength(6)}/{status:Invoice.Status}", Name = "GetInvByStatus")]
@@ -53,19 +52,27 @@ namespace InvoiceAPP.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<List<Invoice>> GetInvoicesByStatus(string ownerId, Invoice.Status status)
         {
-            var invoices =  _invoiceService.getInvoicesByStatus(ownerId, status);
-            Func<object, ActionResult> func = statusMappings[invoices.Key];
-            return func(invoices.Value);
+            List<Invoice> ?invoices =  _invoiceService.getInvoicesByStatus(ownerId, status);
+            if (invoices != null)
+            {
+                if (invoices.Any()) return Ok(invoices);
+                return BadRequest();
+            }
+            return BadRequest();
         }
 
         [HttpPost("create-device/")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<Invoice> CreateInvoice([FromBody] Invoice invoice)
+        public ActionResult<Invoice> CreateInvoice([FromBody] Invoice invoiceToCreate)
         {
-            var invoices =  _invoiceService.newInvoice(invoice);
-            Func<object, ActionResult> func = statusMappings[invoices.Key];
-            return func(invoices.Value);
+            var invoice =  _invoiceService.newInvoice(invoiceToCreate);
+            if (invoice != null)
+            {
+                if (invoice.status != Invoice.Status.UNINITIALIZED) return NoContent();
+                return NotFound();
+            }
+            return BadRequest();
         }
         
         [HttpDelete("delete/{(invoiceId:length(6)}", Name = "DeleteInvoices")]
@@ -75,9 +82,14 @@ namespace InvoiceAPP.Controllers
         
         public ActionResult DeleteInvoice(string invoiceId)
         {
-            return statusMappings[_invoiceService.deleteInvoice(invoiceId)](null);
+            Invoice invoice = _invoiceService.deleteInvoice(invoiceId);
+            if (invoice != null)
+            {
+                if (invoice.status != Invoice.Status.UNINITIALIZED) return NoContent();
+                return NotFound();
+            }
+            return BadRequest();
         }
-
         
         [HttpPatch("mark-as-paid/{invoiceId:length(6)}", Name = "MarkAsPaid")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -85,10 +97,14 @@ namespace InvoiceAPP.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult MarkInvoiceAsPaid(string invoiceId)
         {
-            return statusMappings[_invoiceService.markAsPaid(invoiceId)](null);
+            var invoice = _invoiceService.markAsPaid(invoiceId);
+            if (invoice != null)
+            {
+                if (invoice.status != Invoice.Status.UNINITIALIZED) return NoContent();
+                return NotFound();
+            }
+            return BadRequest();
         }
-
-
         
         [HttpPatch("edit/{invoiceId:length(6)}", Name = "EditInvoice")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -96,9 +112,16 @@ namespace InvoiceAPP.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult EditInvoice(string invoiceId, JsonPatchDocument<Invoice> invoicePatch)
         {
-            Invoice invoice = new Invoice();
-            invoicePatch.ApplyTo(invoice, ModelState);
-            return statusMappings[_invoiceService.editInvoice(invoiceId, invoice)](null);
+            Invoice invoiceForApply = new Invoice();
+            invoicePatch.ApplyTo(invoiceForApply, ModelState);
+            //return statusMappings[_invoiceService.editInvoice(invoiceId, invoice)](null);
+            var invoice = _invoiceService.editInvoice(invoiceId, invoiceForApply);
+            if (invoice != null)
+            {
+                if (invoice.status != Invoice.Status.UNINITIALIZED) return NoContent();
+                return NotFound();
+            }
+            return BadRequest();
         }
         
     }

@@ -82,18 +82,19 @@ namespace InvoiceAPP.Models
             return false;
         }
 
-        public bool deleteInvoice(string invoiceId)
+        public Invoice.Invoice? deleteInvoice(string invoiceId)
         {
+            Invoice.Invoice deletedInvoice = new Invoice.Invoice();
             foreach (var invoice in InvoiceStore.invoiceList)
             {
                 if (invoice.invoiceId == invoiceId)
-                {
+                {   
+                    deletedInvoice.transferData(invoice);
                     InvoiceStore.invoiceList.Remove(invoice);
-                    return true;
+                    return deletedInvoice;
                 }
             }
-            
-            return false;
+            return null;
         }
         
         public List<Invoice.Invoice> getInvoicesByOwnerId(string ownerId)
@@ -106,22 +107,21 @@ namespace InvoiceAPP.Models
                     invoices.Add(InvoiceStore.invoiceList[i]);
                 }
             }
-            if (invoices.Any()) return invoices;
-            return null;
+            return invoices;
         }
 
         public List<Invoice.Invoice> getInvoicesByStatus(string ownerId, Invoice.Invoice.Status status)
         {
-            List<Invoice.Invoice> invoices = new List<Invoice.Invoice>();
-            for (int i = 0; i < InvoiceStore.invoiceList.Count(); i++)
+            List<Invoice.Invoice> invoices = getInvoicesByOwnerId(ownerId);
+            for (int i = 0; i <invoices.Count; i++)
             {
-                if (InvoiceStore.invoiceList[i].ownerId == ownerId && InvoiceStore.invoiceList[i].status == status)
+                if (invoices[i].status == status)
                 {
-                    invoices.Add(InvoiceStore.invoiceList[i]);
+                    invoices.Add(invoices[i]);
                 }
             }
-            if (invoices.Any())  return invoices;
-            return null;
+
+            return invoices;
         }
 
         public Invoice.Invoice? getInvloiceByInvoiceId(string invoiceId)
