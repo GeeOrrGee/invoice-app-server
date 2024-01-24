@@ -1,5 +1,8 @@
 ﻿using InvoiceAPP.Models.DTO;
+using InvoiceAPP.Models.Invoice;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using static InvoiceAPP.Models.InvoiceRepository;
 
 namespace InvoiceAPP.Models
 {
@@ -11,77 +14,165 @@ namespace InvoiceAPP.Models
             _invoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
         }
         
-        protected bool ValidateInvoice(InvoiceDTO invoiceToValidate)
+        private bool checkInvoiceIdType(string invoiceId)
         {
-            if (invoiceToValidate.FromUserID == 0)
-                return false;
-            if (invoiceToValidate.ToUserID == 0)
-                return false;
-            if (invoiceToValidate.InvoiceId  != 0)
-                return false;
-            if (invoiceToValidate.Amount <= 0)
-                return false;
-            return true;
-        }
-
-        public bool CreateInvoice(InvoiceDTO invoiceToCreate)
-        {
-            if (!ValidateInvoice(invoiceToCreate))
+            int num_of_chars = Const.NUMBER_OF_CHARACTERS;
+            for (int i = 0; i < num_of_chars; i++)
             {
-                return false;
+                if (invoiceId[i] < Const.FROM_SYMBOL_FOR_CHARS || invoiceId[i] > Const.TO_SYMBOL_FOR_CHARS) return false;
             }
-            return _invoiceRepository.CreateInvoice(invoiceToCreate);
+            
+            for (int i = num_of_chars; i <invoiceId.Count(); i++)
+            {
+                if (invoiceId[i] < Const.FROM_SYMBOL_FOR_DIGIT || invoiceId[i] > Const.TO_SYMBOL_FOR_DIGIT) return false;
+            }
+            return true;
         }
         
-        public InvoiceDTO? GetInvoice(int invoiceId)
+        private bool checkAddressValidation(Address address)
         {
-            try
+            //TODO:
+            return true;
+        }
+        
+        //Needs modife
+        private bool checkClientInfo(CustomerInfo clientinfo)
+        {
+            //TODO;
+            if (!checkAddressValidation(clientinfo.address)) return false;
+            return true;
+        }
+    
+        //Needs modife
+        private bool validateInvoice(Invoice.Invoice invoice)
+        {
+            //TODO:
+            if (invoice.invoiceId != "" || !checkAddressValidation(invoice.billFrom)) return false;
+            if (invoice.status == Invoice.Invoice.Status.PAID ||
+                (invoice.status != Invoice.Invoice.Status.DRAFT &&
+                invoice.status != Invoice.Invoice.Status.PANDING)) return false;
+            if (!checkClientInfo(invoice.billTo)) return false;
+            return true;
+        }
+        
+        public KeyValuePair<STATUS_CODE, Invoice.Invoice> newInvoice(Invoice.Invoice invoiceToCreate)
+        {
+            if (validateInvoice(invoiceToCreate))
             {
-                var invoice =  _invoiceRepository.GetInvoice(invoiceId);
-                return invoice;
+                _invoiceRepository.newInvoice(invoiceToCreate);
+                return new KeyValuePair<STATUS_CODE, Invoice.Invoice>(
+                    STATUS_CODE.OK, invoiceToCreate);
             }
-            catch (Exception ex)
+            else
             {
-                throw new ArgumentException("Invoice with this Id does not exist");
+                return new KeyValuePair<STATUS_CODE, Invoice.Invoice>(
+                    STATUS_CODE.BAD_REQUEST, null);
             }
+
         }
 
-        public List<InvoiceDTO>? GetInvoiceList(int fromUserId)
+        private bool checkInvoice(Invoice.Invoice invoice)
         {
-            try
+            //TODO:
+            return true;
+        }
+
+        public STATUS_CODE editInvoice(string invoiceId, Invoice.Invoice editedInvoice)
+        {
+            if (!checkInvoiceIdType(invoiceId) && checkInvoice(editedInvoice))
             {
-                return _invoiceRepository.GetInvoiceList(fromUserId);
+                if (_invoiceRepository.editInvoice(invoiceId, editedInvoice))
+                {
+                    return STATUS_CODE.NO_CONTENT;
+                }
+                return STATUS_CODE.NOT_FOUND;
             }
-            catch (Exception ex)
+            return STATUS_CODE.BAD_REQUEST;
+        }
+        
+        //Need Modife
+        public STATUS_CODE markAsPaid(string invoiceId)
+        {
+            if (checkInvoiceIdType(invoiceId))
             {
-                throw new ArgumentException("Invoice with this UserId does not exist");
+                if (_invoiceRepository.markAsPaid(invoiceId))
+                {
+                    return STATUS_CODE.NO_CONTENT;    
+                }
+                else
+                {
+                    return STATUS_CODE.NOT_FOUND;  
+                }
+            }
+            return STATUS_CODE.BAD_REQUEST;
+        }
+
+        public STATUS_CODE deleteInvoice(string invoiceId)
+        {
+            if (checkInvoiceIdType(invoiceId))
+            {
+                if (_invoiceRepository.deleteInvoice(invoiceId))
+                {
+                    return STATUS_CODE.NO_CONTENT;    
+                }
+                return STATUS_CODE.NOT_FOUND;
+            }
+            return STATUS_CODE.BAD_REQUEST;
+        }
+        
+        // This method needs modife       
+        public KeyValuePair<STATUS_CODE, List<Invoice.Invoice> >  getInvoicesByOwnerId(string ownerId)
+        {
+            List < Invoice.Invoice > result= _invoiceRepository.getInvoicesByOwnerId(ownerId);
+            if (result != null)
+            {
+                return new KeyValuePair<STATUS_CODE, List<Invoice.Invoice>>(STATUS_CODE.OK, result);
+            }
+            else
+            {
+                return new KeyValuePair<STATUS_CODE, List<Invoice.Invoice>>(STATUS_CODE.NOT_FOUND, null);
             }
         }
         
-        public bool DeleteInvoice(int invoiceId)
+        // This method needs modife       
+        public  KeyValuePair<STATUS_CODE, List<Invoice.Invoice> > getInvoicesByStatus(string ownerId, Invoice.Invoice.Status status)
         {
-            try
+            if ((status == Invoice.Invoice.Status.PAID || status == Invoice.Invoice.Status.DRAFT ||
+                 status == Invoice.Invoice.Status.PANDING))
             {
-                return _invoiceRepository.DeleteInvoice(invoiceId);
+                List<Invoice.Invoice> result = _invoiceRepository.getInvoicesByStatus(ownerId, status);
+                if (result != null)
+                {
+                    return new KeyValuePair<STATUS_CODE, List<Invoice.Invoice>>(
+                        STATUS_CODE.OK, result);
+                }
+                else
+                {
+                    return new KeyValuePair<STATUS_CODE, List<Invoice.Invoice>>(
+                        STATUS_CODE.NOT_FOUND, null);
+                }
             }
-            catch (Exception ex)
-            {
-                return false;
-            }
-            return true;
+            return new KeyValuePair<STATUS_CODE, List<Invoice.Invoice> >(STATUS_CODE.BAD_REQUEST, null);
         }
 
-        public bool UpdateInvoice(int invoiceId, double newAmount)
+        public KeyValuePair<STATUS_CODE, Invoice.Invoice> getInvoiceByInvoiceId(string invoiceId)
         {
-            try
+            if (checkInvoiceIdType(invoiceId))
             {
-                _invoiceRepository.UpdateInvoice(invoiceId, newAmount);
+                Invoice.Invoice result = _invoiceRepository.getInvloiceByInvoiceId(invoiceId);
+                if (result != null)
+                {
+                    return new KeyValuePair<STATUS_CODE, Invoice.Invoice>(
+                        STATUS_CODE.OK, result);
+                }
+                return new KeyValuePair<STATUS_CODE, Invoice.Invoice>(
+                    STATUS_CODE.NOT_FOUND, null);
             }
-            catch (Exception ex)
+            else
             {
-                throw new ArgumentException("Invoice with this Id does not exist");
+                return new KeyValuePair<STATUS_CODE, Invoice.Invoice>(
+                    STATUS_CODE.BAD_REQUEST, null);
             }
-            return true;
         }
     }
 }

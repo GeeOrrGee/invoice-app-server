@@ -1,4 +1,5 @@
 ﻿using InvoiceAPP.Data;
+using InvoiceAPP.Models;
 using InvoiceAPP.Models.DTO;
 using Microsoft.AspNetCore.Http;
 
@@ -6,14 +7,6 @@ namespace InvoiceAPP.Models
 {
     public class InvoiceRepository : IInvoiceRepository
     {
-        private const int NUMBER_OF_DIGITS     = 4;
-        private const int NUMBER_OF_CHARACTERS = 2;
-
-        private const char FROM_SYMBOL_FOR_DIGIT = '0';
-        private const char TO_SYMBOL_FRO_DIGIT   = '9';
-
-        private const char FROM_SYMBOL_FOR_CHARS = 'A';
-        private const char TO_SYMBOL_FOR_CHARS   = 'Z';
         
         private static string GenerateRandomSymbols(int length, char symbolsFrom, char symbolsTo)
         {
@@ -29,9 +22,9 @@ namespace InvoiceAPP.Models
         
         static string GenerateString()
         {
-            string uppercaseChars = GenerateRandomSymbols(NUMBER_OF_CHARACTERS, FROM_SYMBOL_FOR_CHARS, TO_SYMBOL_FOR_CHARS);
+            string uppercaseChars = GenerateRandomSymbols(Const.NUMBER_OF_CHARACTERS, Const.FROM_SYMBOL_FOR_CHARS, Const.TO_SYMBOL_FOR_CHARS);
          
-            string digits = GenerateRandomSymbols(NUMBER_OF_DIGITS, FROM_SYMBOL_FOR_DIGIT, TO_SYMBOL_FRO_DIGIT);
+            string digits = GenerateRandomSymbols(Const.NUMBER_OF_DIGITS, Const.FROM_SYMBOL_FOR_DIGIT, Const.TO_SYMBOL_FOR_DIGIT);
             
             string result = uppercaseChars + digits;
 
@@ -78,18 +71,18 @@ namespace InvoiceAPP.Models
             return false;
         }
 
-        public bool markAsPaid(string invoiceId, Invoice.Invoice.Status newStatus)
+        public bool markAsPaid(string invoiceId)
         {
             for (int i = 0; i < InvoiceStore.invoiceList.Count(); i++)
             {
-                if (InvoiceStore.invoiceList[i].invoiceId == invoiceId)
+                if (InvoiceStore.invoiceList[i].invoiceId == invoiceId && InvoiceStore.invoiceList[i].status == Invoice.Invoice.Status.PANDING)
                 {
-                    InvoiceStore.invoiceList[i].status = newStatus;
-                    return false;
+                    InvoiceStore.invoiceList[i].status = Invoice.Invoice.Status.PAID;
+                    return true;
                 }
             }
             
-            return true;
+            return false;
         }
 
         public bool deleteInvoice(string invoiceId)
@@ -116,11 +109,11 @@ namespace InvoiceAPP.Models
                     invoices.Add(InvoiceStore.invoiceList[i]);
                 }
             }
-            
-            return invoices;
+            if (invoices.Any()) return invoices;
+            return null;
         }
 
-        public List<Invoice.Invoice> GetInvoicesByStatus(string ownerId, Invoice.Invoice.Status status)
+        public List<Invoice.Invoice> getInvoicesByStatus(string ownerId, Invoice.Invoice.Status status)
         {
             List<Invoice.Invoice> invoices = new List<Invoice.Invoice>();
             for (int i = 0; i < InvoiceStore.invoiceList.Count(); i++)
@@ -130,8 +123,20 @@ namespace InvoiceAPP.Models
                     invoices.Add(InvoiceStore.invoiceList[i]);
                 }
             }
-            
-            return invoices;
+            if (invoices.Any())  return invoices;
+            return null;
+        }
+
+        public Invoice.Invoice? getInvloiceByInvoiceId(string invoiceId)
+        {
+            for (int i = 0; i < Data.InvoiceStore.invoiceList.Count(); i++)
+            {
+                if (Data.InvoiceStore.invoiceList[i].invoiceId == invoiceId)
+                {
+                    return InvoiceStore.invoiceList[i];
+                }
+            }
+            return null;
         }
     }
 }
