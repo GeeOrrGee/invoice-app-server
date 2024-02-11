@@ -35,14 +35,13 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API V1");
     });
+    app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 
 app.UseExceptionHandler("/Home/Error");
 
 app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();
