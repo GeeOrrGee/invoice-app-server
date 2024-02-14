@@ -1,4 +1,6 @@
+using InvoiceAPP.Data;
 using InvoiceAPP.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +27,9 @@ builder.Services.Configure<RouteOptions>(options =>
 {
     options.ConstraintMap.Add("Invoice.Status", typeof(InvoiceAPP.Controllers.EnumRoutes.Extensions.CustomRouteConstraint<InvoiceAPP.Models.Invoice.Invoice.Status>));
 });
+
+builder.Services.AddDbContext<InvoiceDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection")));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
