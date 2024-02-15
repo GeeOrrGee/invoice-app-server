@@ -5,10 +5,7 @@ namespace InvoiceAPP.Models
     public class InvoiceEntity
     {
         [Key]
-
-        public int ID { get; set; }
-        [Required]
-        public string invoiceID { get; set; }
+        public string ID { get; set; }
         [Required]
         public int  billFromAddressID {  get; set; }
         [Required]
@@ -31,8 +28,7 @@ namespace InvoiceAPP.Models
 
         public InvoiceEntity(int id, string invoiceID, int billfromadressid, string clientname, string clientemail, int cliendAdressid, DateTime createdate,string projectdescription,string status)
         {
-            this.ID = id;
-            this.invoiceID = invoiceID;
+            this.ID = invoiceID;
             this.billFromAddressID = billfromadressid;
             this.clientName = clientname;
             this.clientEmail = clientemail;
