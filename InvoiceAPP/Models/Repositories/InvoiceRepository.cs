@@ -1,4 +1,5 @@
 ﻿using InvoiceAPP.Data;
+using Microsoft.OpenApi.Any;
 
 namespace InvoiceAPP.Models.Repositories
 {
@@ -61,6 +62,16 @@ namespace InvoiceAPP.Models.Repositories
         public IEnumerable<InvoiceEntity> GetList()
         {
             return _context.Invoices.ToList();
+        }
+
+        public IEnumerable<InvoiceEntity> GetListByStatus(string status)
+        {
+            var invoices = _context.Invoices.Where(x => x.Status == status);
+            if (invoices.Any())
+            {
+                return invoices.ToList();
+            }
+            throw new ArgumentNullException("Invoice with this status does not exist");
         }
     }
 }

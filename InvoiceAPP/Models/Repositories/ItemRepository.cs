@@ -61,6 +61,11 @@ namespace InvoiceAPP.Models.Repositories
             return _context.Items.ToList();
         }
 
+        IEnumerable<ItemEntity> IRepository<ItemEntity>.GetListByStatus(string status)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Update(ItemEntity item)
         {
             _context.Items.Update(item);

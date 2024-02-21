@@ -28,7 +28,7 @@ namespace InvoiceAPP.Models.Repositories
 
         public void Delete(string id)
         {
-            var entity= _context.Adresses.FirstOrDefault(x => x.Id == id);
+            var entity = _context.Adresses.FirstOrDefault(x => x.Id == id);
             if (entity != null)
             {
                 _context.Adresses.Remove(entity);
@@ -42,11 +42,11 @@ namespace InvoiceAPP.Models.Repositories
             {
                 throw new ArgumentNullException("Address with this id does not exist!");
             }
-            var address= _context.Adresses.FirstOrDefault(x => x.Id==id);
+            var address = _context.Adresses.FirstOrDefault(x => x.Id == id);
             return address!;
         }
 
-         IEnumerable<AdressEntity> IRepository<AdressEntity>.GetIList(string id)
+        IEnumerable<AdressEntity> IRepository<AdressEntity>.GetIList(string id)
         {
             throw new NotImplementedException();
         }
@@ -60,6 +60,11 @@ namespace InvoiceAPP.Models.Repositories
         {
             _context.Adresses.Update(item);
             _context.SaveChanges();
+        }
+
+        IEnumerable<AdressEntity> IRepository<AdressEntity>.GetListByStatus(string status)
+        {
+            throw new NotImplementedException();
         }
     }
 }
