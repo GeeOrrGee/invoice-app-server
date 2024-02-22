@@ -11,9 +11,9 @@ namespace InvoiceAPP.Models
         [Required]
         public string Name { get; set; }
         [Required]
-        public string Quantity { get;set; }
+        public int Quantity { get;set; }
         [Required]
-        public string Price { get; set; }
+        public decimal Price { get; set; }
         [Required]
         public string invoiceID { get; set; }
 
@@ -22,7 +22,7 @@ namespace InvoiceAPP.Models
             
         }
 
-        public ItemEntity(string iD, string name, string quantity, string price, string invoiceID)
+        public ItemEntity(string iD, string name, int quantity, decimal price, string invoiceID)
         {
             ID = iD;
             Name = name;

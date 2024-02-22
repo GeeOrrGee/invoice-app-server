@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InvoiceAPP.Models
 {
@@ -6,27 +7,30 @@ namespace InvoiceAPP.Models
     {
         [Key]
         public string ID { get; set; }
-        [Required]
-        public int  billFromAddressID {  get; set; }
+        [ForeignKey("AdressEntity")]
+        public string  billFromAddressID {  get; set; }
         [Required]
         public string clientName {  get; set; }
         [Required]
         public string clientEmail { get; set; }
-        [Required]
-        public int clientAdressID { get; set; }
+        public int paymentTerm { get; set; }
+        [ForeignKey("AdressEntity")]
+        public string clientAdressID { get; set; }
         [Required]
         public DateTime createDate { get; set; }
         [Required]
         public string projectDescription { get;set; }
         [Required]
         public string Status { get; set; }
+        [Required]
+        public AdressEntity AdressEntity { get; set; }
 
         public InvoiceEntity()
         {
-
+         
         }
 
-        public InvoiceEntity(int id, string invoiceID, int billfromadressid, string clientname, string clientemail, int cliendAdressid, DateTime createdate,string projectdescription,string status)
+        public InvoiceEntity(int id, string invoiceID, string billfromadressid, string clientname, string clientemail, string cliendAdressid, DateTime createdate,string projectdescription,string status)
         {
             this.ID = invoiceID;
             this.billFromAddressID = billfromadressid;

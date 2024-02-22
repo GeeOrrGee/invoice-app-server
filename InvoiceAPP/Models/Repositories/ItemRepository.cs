@@ -56,7 +56,7 @@ namespace InvoiceAPP.Models.Repositories
             throw new ArgumentNullException("Item with this id does not exist!");
         }
 
-        public IEnumerable<ItemEntity> GetList()
+        public IEnumerable<ItemEntity> GetList(string iD)
         {
             return _context.Items.ToList();
         }
@@ -70,6 +70,11 @@ namespace InvoiceAPP.Models.Repositories
         {
             _context.Items.Update(item);
             _context.SaveChanges();
+        }
+
+        public IEnumerable<ItemEntity> GetList()
+        {
+           return _context.Items.ToList();
         }
     }
 }
