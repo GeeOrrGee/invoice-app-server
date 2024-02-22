@@ -1,139 +1,77 @@
 ﻿using InvoiceAPP.Data;
+using Microsoft.OpenApi.Any;
 
-namespace InvoiceAPP.Models
+namespace InvoiceAPP.Models.Repositories
 {
-    public class InvoiceRepository : IInvoiceRepository
+    public class InvoiceRepository : IRepository<InvoiceEntity>
     {
-        
-        private static string GenerateRandomSymbols(int length, char symbolsFrom, char symbolsTo)
-        {
-            Random random = new Random();
-            string symbols = "";
-            for (int i = 0; i < length; i++)
-            {
-                char randomDigit = (char)random.Next(symbolsFrom, symbolsTo + 1);
-                symbols += randomDigit;
-            }
-            return symbols;
-        }
-        
-        static string GenerateString()
-        {
-            string uppercaseChars = GenerateRandomSymbols(Const.NUMBER_OF_CHARACTERS, Const.FROM_SYMBOL_FOR_CHARS, Const.TO_SYMBOL_FOR_CHARS);
-         
-            string digits = GenerateRandomSymbols(Const.NUMBER_OF_DIGITS, Const.FROM_SYMBOL_FOR_DIGIT, Const.TO_SYMBOL_FOR_DIGIT);
-            
-            string result = uppercaseChars + digits;
+        private readonly InvoiceDbContext _context;
 
-            return result;
+        public InvoiceRepository(InvoiceDbContext context)
+        {
+            _context = context;
         }
 
-        private static bool checkingGeneratedString(string generatedString)
+        public bool Create(InvoiceEntity item)
         {
-            foreach (var invoice in Data.InvoiceStore.invoiceList)
+            try
             {
-                if (generatedString == invoice.invoiceId) return false;
-            }
-            return true;
-        }
-
-        private string generateNewInvoiceId()
-        {
-            string newPossibleInvoiceId;
-            while (true)
-            {
-                newPossibleInvoiceId = GenerateString();
-                if (checkingGeneratedString(newPossibleInvoiceId)) break;
-            }
-            return newPossibleInvoiceId;
-        }
-        public bool newInvoice(Invoice.Invoice invoiceToCreate)
-        {
-                invoiceToCreate.invoiceId = generateNewInvoiceId();
-                InvoiceStore.invoiceList.Add(invoiceToCreate);
+                _context.Invoices.Add(item);
+                _context.SaveChanges();
                 return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
         }
 
-        public bool editInvoice(string invoiceId, Invoice.Invoice editedInvoice)
+        public void Delete(string id)
         {
-            for (int i = 0; i < InvoiceStore.invoiceList.Count(); i++)
+            var entity = _context.Invoices.FirstOrDefault(x => x.ID == id);
+            if (entity != null)
             {
-                if (InvoiceStore.invoiceList[i].invoiceId == invoiceId)
-                {
-                    InvoiceStore.invoiceList[i] = editedInvoice;
-                    return true;
-                }
+                _context.Invoices.Remove(entity);
+                _context.SaveChanges();
             }
-            
-            return false;
+            throw new ArgumentException("Invoice with this id does not exist!");
         }
 
-        public bool markAsPaid(string invoiceId)
+        public void Update(InvoiceEntity item)
         {
-            for (int i = 0; i < InvoiceStore.invoiceList.Count(); i++)
-            {
-                if (InvoiceStore.invoiceList[i].invoiceId == invoiceId && InvoiceStore.invoiceList[i].status == Invoice.Invoice.Status.PANDING)
-                {
-                    InvoiceStore.invoiceList[i].status = Invoice.Invoice.Status.PAID;
-                    return true;
-                }
-            }
-            
-            return false;
+            _context.Invoices.Update(item);
+            _context.SaveChanges();
         }
 
-        public Invoice.Invoice? deleteInvoice(string invoiceId)
+        public InvoiceEntity GetById(string id)
         {
-            Invoice.Invoice deletedInvoice = new Invoice.Invoice();
-            foreach (var invoice in InvoiceStore.invoiceList)
+            if (id is null)
             {
-                if (invoice.invoiceId == invoiceId)
-                {   
-                    deletedInvoice.transferData(invoice);
-                    InvoiceStore.invoiceList.Remove(invoice);
-                    return deletedInvoice;
-                }
+                throw new ArgumentNullException("Invoice with this id does not exist!");
             }
-            return null;
-        }
-        
-        public List<Invoice.Invoice> getInvoicesByOwnerId(string ownerId)
-        {
-            List<Invoice.Invoice> invoices = new List<Invoice.Invoice>();
-            for (int i = 0; i < InvoiceStore.invoiceList.Count(); i++)
-            {
-                if (InvoiceStore.invoiceList[i].ownerId == ownerId)
-                {
-                    invoices.Add(InvoiceStore.invoiceList[i]);
-                }
-            }
-            return invoices;
+            var invoice = _context.Invoices.FirstOrDefault(x => x.ID == id);
+            return invoice!;
         }
 
-        public List<Invoice.Invoice> getInvoicesByStatus(string ownerId, Invoice.Invoice.Status status)
+        IEnumerable<InvoiceEntity> IRepository<InvoiceEntity>.GetIList(string id)
         {
-            List<Invoice.Invoice> invoices = getInvoicesByOwnerId(ownerId);
-            for (int i = 0; i <invoices.Count; i++)
-            {
-                if (invoices[i].status == status)
-                {
-                    invoices.Add(invoices[i]);
-                }
-            }
-
-            return invoices;
+            throw new NotImplementedException();
         }
 
-        public Invoice.Invoice? getInvloiceByInvoiceId(string invoiceId)
+        public IEnumerable<InvoiceEntity> GetList()
         {
-            for (int i = 0; i < Data.InvoiceStore.invoiceList.Count(); i++)
+            return _context.Invoices.ToList();
+        }
+
+        public IEnumerable<InvoiceEntity> GetListByStatus(string status)
+        {
+            var invoices = _context.Invoices.Where(x => x.Status == status);
+            if (invoices.Any())
             {
-                if (Data.InvoiceStore.invoiceList[i].invoiceId == invoiceId)
-                {
-                    return InvoiceStore.invoiceList[i];
-                }
+                return invoices.ToList();
             }
-            return null;
+            throw new ArgumentNullException("Invoice with this status does not exist");
         }
     }
 }

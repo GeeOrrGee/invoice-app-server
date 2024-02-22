@@ -1,175 +1,317 @@
-﻿using InvoiceAPP.Models.Invoice;
+﻿using AutoMapper;
+using InvoiceAPP.Models.DTO;
+using InvoiceAPP.Models.Repositories;
+using InvoiceAPP.Models.Services;
 
 namespace InvoiceAPP.Models
 {
-    public class InvoiceService : IInvoiceService
+    public class InvoiceService : IService
     {
-        private readonly IInvoiceRepository _invoiceRepository;
-        public InvoiceService(IInvoiceRepository invoiceRepository)
+        private readonly ItemRepository _itemRepository;
+        private readonly AddressRepository _addresrepository;
+        private readonly InvoiceRepository _invoiceRepository;
+        private readonly IMapper _mapper;
+
+        public InvoiceService(ItemRepository itemRepository, AddressRepository addressRepository, InvoiceRepository repository, IMapper mapper)
         {
-            _invoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
-        }
-        
-        private bool checkInvoiceIdType(string invoiceId)
-        {
-            int num_of_chars = Const.NUMBER_OF_CHARACTERS;
-            for (int i = 0; i < num_of_chars; i++)
-            {
-                if (invoiceId[i] < Const.FROM_SYMBOL_FOR_CHARS || invoiceId[i] > Const.TO_SYMBOL_FOR_CHARS) return false;
-            }
-            
-            for (int i = num_of_chars; i <invoiceId.Count(); i++)
-            {
-                if (invoiceId[i] < Const.FROM_SYMBOL_FOR_DIGIT || invoiceId[i] > Const.TO_SYMBOL_FOR_DIGIT) return false;
-            }
-            return true;
-        }
-        
-        private bool checkAddressValidation(Address address)
-        {
-            //TODO:
-            return true;
-        }
-        
-        //Needs modife
-        private bool checkClientInfo(CustomerInfo clientinfo)
-        {
-            //TODO;
-            if (!checkAddressValidation(clientinfo.address)) return false;
-            return true;
-        }
-    
-        //Needs modife
-        private bool validateInvoice(Invoice.Invoice invoice)
-        {
-            //TODO:
-            if (invoice.invoiceId != "" || !checkAddressValidation(invoice.billFrom)) return false;
-            if (invoice.status == Invoice.Invoice.Status.PAID ||
-                (invoice.status != Invoice.Invoice.Status.DRAFT &&
-                invoice.status != Invoice.Invoice.Status.PANDING)) return false;
-            if (!checkClientInfo(invoice.billTo)) return false;
-            return true;
+            _itemRepository = itemRepository;
+            _addresrepository = addressRepository;
+            _invoiceRepository = repository;
+            _mapper = mapper;
         }
 
-        private Invoice.Invoice uninitializedInvoice()
+        public bool CreateDraft(InvoiceDTO invoiceDTO)
         {
-            Invoice.Invoice invoice = new Invoice.Invoice();
-            invoice.status = Invoice.Invoice.Status.UNINITIALIZED;
-            return invoice;
+            if (invoiceDTO != null && invoiceDTO.Status.ToUpper() == "DRAFT")
+            {
+                var billfromadressDto = invoiceDTO.billFromAddress;
+                var clientaddressDto = invoiceDTO.ClientAddress;
+
+                var billFromAddress = new AdressEntity()
+                {
+                    country = billfromadressDto.Country,
+                    city = billfromadressDto.City,
+                    streetAdress = billfromadressDto.StreetAddress,
+                    postCode = billfromadressDto.PostCode
+                };
+
+                var clientaddress = new AdressEntity()
+                {
+                    country = billfromadressDto.Country,
+                    city = billfromadressDto.City,
+                    streetAdress = billfromadressDto.StreetAddress,
+                    postCode = billfromadressDto.PostCode
+                };
+                _addresrepository.Create(billFromAddress);
+                _addresrepository.Create(clientaddress);
+                var invoice = new InvoiceEntity()
+                {
+                    billFromAddressID = billFromAddress.Id,
+                    clientName = invoiceDTO.ClientName,
+                    clientEmail = invoiceDTO.ClientEmail,
+                    clientAdressID = clientaddress.Id,
+                    createDate = invoiceDTO.CreateTime,
+                    projectDescription = invoiceDTO.ProjectDescription,
+                    Status = invoiceDTO.Status
+                };
+                _invoiceRepository.Create(invoice);
+                var itemDtoList = invoiceDTO.Items;
+                foreach (var itemDto in itemDtoList)
+                {
+                    var item = new ItemEntity()
+                    {
+                        Name = itemDto.Name,
+                        Quantity = itemDto.Quantity,
+                        Price = itemDto.Price,
+                        invoiceID = invoice.ID
+                    };
+                    _itemRepository.Create(item);
+                }
+                return true;
+            }
+            throw new ArgumentNullException();
         }
 
-        private List<Invoice.Invoice> emptyInvoiceList()
+        public bool CreatePending(InvoiceDTO invoiceDTO)
         {
-            List<Invoice.Invoice> emptyList = new List<Invoice.Invoice>();
-            return emptyList;
-        }
-        
-        public Invoice.Invoice? newInvoice(Invoice.Invoice invoiceToCreate)
-        {
-            if (validateInvoice(invoiceToCreate))
+            if (invoiceDTO != null && invoiceDTO.Status.ToUpper() == "PENDING")
             {
-                _invoiceRepository.newInvoice(invoiceToCreate);
-                return invoiceToCreate;
+                var billfromadressDto = invoiceDTO.billFromAddress;
+                var clientaddressDto = invoiceDTO.ClientAddress;
+
+                var billFromAddress = new AdressEntity()
+                {
+                    country = billfromadressDto.Country,
+                    city = billfromadressDto.City,
+                    streetAdress = billfromadressDto.StreetAddress,
+                    postCode = billfromadressDto.PostCode
+                };
+
+                var clientaddress = new AdressEntity()
+                {
+                    country = billfromadressDto.Country,
+                    city = billfromadressDto.City,
+                    streetAdress = billfromadressDto.StreetAddress,
+                    postCode = billfromadressDto.PostCode
+                };
+                _addresrepository.Create(billFromAddress);
+                _addresrepository.Create(clientaddress);
+                var invoice = new InvoiceEntity()
+                {
+                    billFromAddressID = billFromAddress.Id,
+                    clientName = invoiceDTO.ClientName,
+                    clientEmail = invoiceDTO.ClientEmail,
+                    clientAdressID = clientaddress.Id,
+                    createDate = invoiceDTO.CreateTime,
+                    projectDescription = invoiceDTO.ProjectDescription,
+                    Status = invoiceDTO.Status
+                };
+                _invoiceRepository.Create(invoice);
+                var itemDtoList = invoiceDTO.Items;
+                foreach (var itemDto in itemDtoList)
+                {
+                    var item = new ItemEntity()
+                    {
+                        Name = itemDto.Name,
+                        Quantity = itemDto.Quantity,
+                        Price = itemDto.Price,
+                        invoiceID = invoice.ID
+                    };
+                    _itemRepository.Create(item);
+                }
+                return true;
             }
-            else
-            {
-                return null;
-            }
+            throw new ArgumentNullException();
         }
 
-        private bool checkInvoice(Invoice.Invoice invoice)
+        public void DeleteInvoice(string invoiceID)
         {
-            //TODO:
-            return true;
-        }
-        
-        public Invoice.Invoice? editInvoice(string invoiceId, Invoice.Invoice editedInvoice)
-        {
-            if (!checkInvoiceIdType(invoiceId) && checkInvoice(editedInvoice))
+            if (invoiceID != null)
             {
-                if (_invoiceRepository.editInvoice(invoiceId, editedInvoice))
-                {
-                    return editedInvoice;
-                }
-                
+                _invoiceRepository.Delete(invoiceID);
             }
-            return uninitializedInvoice();
+            throw new ArgumentNullException("Invoice with this Id does not exist!");
         }
-        
-        //Needs Modife
-        public Invoice.Invoice? markAsPaid(string invoiceId)
-        {
-            if (checkInvoiceIdType(invoiceId))
-            {
-                if (_invoiceRepository.markAsPaid(invoiceId))
-                {
-                    return _invoiceRepository.getInvloiceByInvoiceId(invoiceId);    
-                }
-                else
-                {
-                    return uninitializedInvoice();  
-                }
-            }
-            return null;
-        }
-        
 
-        //დასაწერია
-        public Invoice.Invoice? deleteInvoice(string invoiceId)
+        public void UpdateInvoice(InvoiceDTO invoiceDTO)
         {
-            if (checkInvoiceIdType(invoiceId))
+            var invoice = _invoiceRepository.GetById(invoiceDTO.InvoiceId);
+            invoice.Status = invoiceDTO.Status;
+            invoice.clientEmail = invoiceDTO.ClientEmail;
+            invoice.clientName = invoiceDTO.ClientName;
+            invoice.paymentTerm = invoiceDTO.PaymentTerm;
+            invoice.projectDescription = invoiceDTO.ProjectDescription;
+            _invoiceRepository.Update(invoice);
+        }
+
+        public InvoiceDTO GetinvoiceID(string invoiceID)
+        {
+            if (invoiceID != null)
             {
-                Invoice.Invoice? invoice = _invoiceRepository.deleteInvoice(invoiceId); 
-                if (invoice != null)
+                var invoice = _invoiceRepository.GetById(invoiceID);
+                var billFromAddress = _addresrepository.GetById(invoice.billFromAddressID);
+                var billFromAddressDto = new AddressDTO()
                 {
-                    return invoice;    
-                }
-                return uninitializedInvoice();
-            }
-            return null;
-        }
-        
-        // This method needs modife       
-        public List<Invoice.Invoice> getInvoicesByOwnerId(string ownerId)
-        {
-            List < Invoice.Invoice > result= _invoiceRepository.getInvoicesByOwnerId(ownerId);
-            if (result != null)
-            {
-                return result;
-            }
-            else
-            {
-                return emptyInvoiceList();
-            }
-        }
-        
-        // This method needs modife       
-        public  List<Invoice.Invoice>?  getInvoicesByStatus(string ownerId, Invoice.Invoice.Status status)
-        {
-            if ((status == Invoice.Invoice.Status.PAID || status == Invoice.Invoice.Status.DRAFT ||
-                 status == Invoice.Invoice.Status.PANDING))
-            {
-                List<Invoice.Invoice> result = _invoiceRepository.getInvoicesByStatus(ownerId, status);
-                return result;
-            }
-            return null;
-        }
-        
-        public Invoice.Invoice? getInvoiceByInvoiceId(string invoiceId)
-        {
-            if (checkInvoiceIdType(invoiceId))
-            {
-                Invoice.Invoice result = _invoiceRepository.getInvloiceByInvoiceId(invoiceId);
-                if (result != null)
+                    Country = billFromAddress.country,
+                    City = billFromAddress.city,
+                    StreetAddress = billFromAddress.streetAdress,
+                    PostCode = billFromAddress.postCode
+                };
+
+                var clientAddress = _addresrepository.GetById(invoice.clientAdressID);
+                var clientAddressDto = new AddressDTO()
                 {
-                    return result;
+                    Country = clientAddress.country,
+                    City = clientAddress.city,
+                    StreetAddress = clientAddress.streetAdress,
+                    PostCode = clientAddress.postCode
+                };
+
+                var itemList = _itemRepository.GetList(invoice.ID).ToList();
+                var itemListDto = new List<ItemDTO>();
+                foreach (var item in itemList)
+                {
+                    var itemDto = new ItemDTO()
+                    {
+                        Name = item.Name,
+                        Quantity = item.Quantity,
+                        Price = item.Price
+                    };
+                    itemListDto.Add(itemDto);
                 }
-                return uninitializedInvoice();
+
+                var invoiceDto = new InvoiceDTO()
+                {
+                    ClientName = invoice.clientName,
+                    ClientEmail = invoice.clientEmail,
+                    CreateTime = invoice.createDate,
+                    PaymentTerm = invoice.paymentTerm,
+                    Status = invoice.Status,
+                    billFromAddress = billFromAddressDto,
+                    ClientAddress = clientAddressDto,
+                    Items = itemListDto
+                };
+                return invoiceDto;
             }
-            else
+            throw new ArgumentNullException("Invoice with this Id does not exist");
+        }
+
+        public IEnumerable<InvoiceDTO> GetinvoiceList()
+        {
+            var invoiceList = _invoiceRepository.GetList().ToList();
+            var invoiceDtolist = new List<InvoiceDTO>();
+            foreach (var invoice in invoiceList)
             {
-                return null;
+                var billFromAddress = _addresrepository.GetById(invoice.billFromAddressID);
+                var billFromAddressDto = new AddressDTO()
+                {
+                    Country = billFromAddress.country,
+                    City = billFromAddress.city,
+                    StreetAddress = billFromAddress.streetAdress,
+                    PostCode = billFromAddress.postCode
+                };
+
+                var clientAddress = _addresrepository.GetById(invoice.clientAdressID);
+                var clientAddressDto = new AddressDTO()
+                {
+                    Country = clientAddress.country,
+                    City = clientAddress.city,
+                    StreetAddress = clientAddress.streetAdress,
+                    PostCode = clientAddress.postCode
+                };
+
+                var itemList = _itemRepository.GetList(invoice.ID).ToList();
+                var itemListDto = new List<ItemDTO>();
+                foreach (var item in itemList)
+                {
+                    var itemDto = new ItemDTO()
+                    {
+                        Name = item.Name,
+                        Quantity = item.Quantity,
+                        Price = item.Price
+                    };
+                    itemListDto.Add(itemDto);
+                }
+
+                var invoiceDto = new InvoiceDTO()
+                {
+                    ClientName = invoice.clientName,
+                    ClientEmail = invoice.clientEmail,
+                    CreateTime = invoice.createDate,
+                    PaymentTerm = invoice.paymentTerm,
+                    Status = invoice.Status,
+                    billFromAddress = billFromAddressDto,
+                    ClientAddress = clientAddressDto,
+                    Items = itemListDto
+                };
+                invoiceDtolist.Add(invoiceDto);
             }
+            return invoiceDtolist;
+        }
+
+        public IEnumerable<InvoiceDTO> GetinvoiceListByStatus(string status)
+        {
+            var invoiceList = _invoiceRepository.GetListByStatus(status).ToList();
+            var invoiceDtolist = new List<InvoiceDTO>();
+            foreach (var invoice in invoiceList)
+            {
+                var billFromAddress = _addresrepository.GetById(invoice.billFromAddressID);
+                var billFromAddressDto = new AddressDTO()
+                {
+                    Country = billFromAddress.country,
+                    City = billFromAddress.city,
+                    StreetAddress = billFromAddress.streetAdress,
+                    PostCode = billFromAddress.postCode
+                };
+
+                var clientAddress = _addresrepository.GetById(invoice.clientAdressID);
+                var clientAddressDto = new AddressDTO()
+                {
+                    Country = clientAddress.country,
+                    City = clientAddress.city,
+                    StreetAddress = clientAddress.streetAdress,
+                    PostCode = clientAddress.postCode
+                };
+
+                var itemList = _itemRepository.GetList(invoice.ID).ToList();
+                var itemListDto = new List<ItemDTO>();
+                foreach (var item in itemList)
+                {
+                    var itemDto = new ItemDTO()
+                    {
+                        Name = item.Name,
+                        Quantity = item.Quantity,
+                        Price = item.Price
+                    };
+                    itemListDto.Add(itemDto);
+                }
+
+                var invoiceDto = new InvoiceDTO()
+                {
+                    ClientName = invoice.clientName,
+                    ClientEmail = invoice.clientEmail,
+                    CreateTime = invoice.createDate,
+                    PaymentTerm = invoice.paymentTerm,
+                    Status = invoice.Status,
+                    billFromAddress = billFromAddressDto,
+                    ClientAddress = clientAddressDto,
+                    Items = itemListDto
+                };
+                invoiceDtolist.Add(invoiceDto);
+            }
+            return invoiceDtolist;
+        }
+
+        public bool MarkAsPaid(string invoiceid)
+        {
+            if (invoiceid != null)
+            {
+                var invoice = _invoiceRepository.GetById(invoiceid);
+                invoice.Status = "PAID";
+                _invoiceRepository.Update(invoice);
+                return true;
+            }
+            return false;
         }
     }
 }
